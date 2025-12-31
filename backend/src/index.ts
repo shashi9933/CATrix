@@ -19,17 +19,25 @@ const prisma = new PrismaClient();
 // ✅ CORS — FIXED
 app.use(cors({
   origin: (origin, callback) => {
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'http://localhost:3000',
-      'http://localhost:5173'
-    ];
+    // allow requests with no origin (like mobile apps, curl, health checks)
+    if (!origin) return callback(null, true);
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed'));
+    // allow localhost for dev
+    if (origin.startsWith('http://localhost')) {
+      return callback(null, true);
     }
+
+    // allow all Vercel deployments
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    // allow custom domain if any
+    if (origin === process.env.FRONTEND_URL) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS not allowed'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
