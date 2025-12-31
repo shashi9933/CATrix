@@ -42,6 +42,9 @@ export const authAPI = {
   
   verify: () =>
     api.post('/auth/verify')
+  ,
+  guest: () =>
+    api.post('/auth/guest')
 };
 
 // ===== USERS API =====

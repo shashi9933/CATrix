@@ -15,6 +15,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInGuest: () => Promise<void>;
   updateProfile: (updates: { name?: string }) => Promise<void>;
 }
 
@@ -74,6 +75,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInGuest = async () => {
+    try {
+      const response = await authAPI.guest();
+      const { user, token } = response.data;
+      localStorage.setItem('token', token);
+      setUser(user);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const updateProfile = async (updates: { name?: string }) => {
     try {
       const response = await userAPI.updateProfile(updates.name || '');
@@ -96,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     signInWithGoogle,
+    signInGuest,
     updateProfile,
   };
 

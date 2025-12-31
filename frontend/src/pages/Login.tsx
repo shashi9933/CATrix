@@ -24,7 +24,7 @@ import {
 
 const Login = () => {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, signInGuest } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +52,19 @@ const Login = () => {
       await signInWithGoogle();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in with Google');
+      setLoading(false);
+    }
+  };
+
+  const handleGuestSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await signInGuest();
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign in as guest');
+    } finally {
       setLoading(false);
     }
   };
@@ -175,6 +188,16 @@ const Login = () => {
                   sx={{ mt: 2, py: 1.5 }}
                 >
                   {loading ? <CircularProgress size={24} /> : 'Sign In'}
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleGuestSignIn}
+                  disabled={loading}
+                  sx={{ mt: 1, py: 1.2 }}
+                >
+                  Continue as Guest
                 </Button>
               </Box>
 

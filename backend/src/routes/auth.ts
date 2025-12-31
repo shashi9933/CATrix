@@ -88,6 +88,23 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Guest login - returns a short-lived guest token (no DB user created)
+router.post('/guest', async (req, res) => {
+  try {
+    const guestId = `guest-${Math.random().toString(36).substring(2, 9)}`;
+    const token = jwt.sign(
+      { userId: guestId, role: 'guest' },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '1d' }
+    );
+
+    res.json({ user: { id: guestId, name: 'Guest', role: 'guest' }, token });
+  } catch (error) {
+    console.error('Guest login error:', error);
+    res.status(500).json({ error: 'Guest login failed' });
+  }
+});
+
 // Verify token
 router.post('/verify', async (req, res) => {
   try {
@@ -97,17 +114,18 @@ router.post('/verify', async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    const user = await prisma.user.findUnique({
-      where: { id: (decoded as any).userId }
-    });
+    // If token is for guest, return guest user without DB lookup
+    if ((decoded as any).role === 'guest') {
+      return res.json({ user: { id: (decoded as any).userId, name: 'Guest', role: 'guest' } });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: (decoded as any).userId } });
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    res.json({
-      user: { id: user.id, email: user.email, name: user.name, role: user.role }
-    });
+    res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role } });
   } catch (error) {
     console.error('Verify error:', error);
     res.status(401).json({ error: 'Invalid token' });
