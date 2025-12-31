@@ -16,22 +16,27 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
-// Middleware
+// ✅ CORS — FIXED
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://ca-trix-8sl8x7ks0-shashi-shekhars-projects-ba2c4902.vercel.app',
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Global error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
-  });
-});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -47,11 +52,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// ✅ Global error handler — MOVED TO BOTTOM
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err.message);
+  res.status(500).json({ error: err.message || 'Internal server error' });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 API Documentation: http://localhost:${PORT}/api/health`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
 
 // Graceful shutdown
