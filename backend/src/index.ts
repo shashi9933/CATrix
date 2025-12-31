@@ -28,7 +28,7 @@ app.use(cors({
     }
 
     // allow all Vercel deployments
-    if (origin.endsWith('.vercel.app')) {
+    if (origin.endsWith('.vercel.app/')) {
       return callback(null, true);
     }
 
