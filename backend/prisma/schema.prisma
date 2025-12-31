@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("user") // "user", "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  testAttempts TestAttempt[]
+  analytics    Analytics[]
+
+  @@map("users")
+}
+
+model Test {
+  id          String   @id @default(cuid())
+  title       String
+  section     String   // "VARC", "DILR", "QA"
+  difficulty  String   // "easy", "medium", "hard"
+  duration    Int      // in minutes
+  totalMarks  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions    Question[]
+  testAttempts TestAttempt[]
+
+  @@map("tests")
+}
+
+model Question {
+  id             String   @id @default(cuid())
+  testId         String
+  test           Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questionText   String
+  options        Json     // array of {id, option_text, option_letter}
+  correctAnswer  String
+  marks          Int
+  explanation    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  questionAttempts QuestionAttempt[]
+
+  @@map("questions")
+}
+
+model TestAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId      String
+  test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  score       Int?
+  timeTaken   Int?     // in seconds
+  status      String   @default("in_progress") // "in_progress", "completed", "abandoned"
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questionAttempts QuestionAttempt[]
+
+  @@map("test_attempts")
+}
+
+model QuestionAttempt {
+  id               String   @id @default(cuid())
+  testAttemptId    String
+  testAttempt      TestAttempt @relation(fields: [testAttemptId], references: [id], onDelete: Cascade)
+  questionId       String
+  question         Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedAnswer   String?
+  isCorrect        Boolean?
+  timeTaken        Int?     // in seconds
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("question_attempts")
+}
+
+model Analytics {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalTests     Int      @default(0)
+  totalScore     Int      @default(0)
+  averageScore   Float    @default(0)
+  totalTimeSpent Int      @default(0) // in seconds
+  accuracy       Float    @default(0) // percentage
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("analytics")
+}
+
+model College {
+  id        String   @id @default(cuid())
+  name      String
+  location  String?
+  cutoff    Int?
+  tier      String?  // "tier1", "tier2", "tier3"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("colleges")
+}
+
+model StudyMaterial {
+  id        String   @id @default(cuid())
+  title     String
+  section   String   // "VARC", "DILR", "QA"
+  content   String
+  fileUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("study_materials")
+}

@@ -1,0 +1,215 @@
+// ============================================================================
+// Prisma Schema - Ultra-Optimized for Free-Tier PostgreSQL
+// ============================================================================
+// Focuses on MINIMAL storage while maintaining data integrity
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// MODEL 1: User
+// ============================================================================
+// Strategy: Store ONLY essential auth data. Profile updates are optional.
+// Storage: ~120 bytes per user
+model User {
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
+  password  String  // bcrypt hash (fixed 60 bytes)
+  name      String?
+  role      Int     @default(0) // 0=user, 1=admin (SMALLINT equivalent)
+  createdAt Int     @default(0) // Unix timestamp
+  updatedAt Int     @default(0) // Unix timestamp
+
+  testAttempts TestAttempt[]
+  sessions     Session[]
+
+  @@index([email]) // For login
+}
+
+// ============================================================================
+// MODEL 2: Test
+// ============================================================================
+// Strategy: Immutable once created. No test descriptions or metadata.
+// Storage: ~50 bytes per test
+model Test {
+  id            Int    @id @default(autoincrement())
+  title         String @db.VarChar(200)
+  section       Int    // 0=VARC, 1=DILR, 2=QA
+  difficulty    Int    // 0=easy, 1=medium, 2=hard
+  durationMins  Int    @default(180) // 3 hours typical
+  totalMarks    Int    @default(100)
+  createdAt     Int    @default(0) // Unix timestamp
+
+  testQuestions TestQuestion[]
+  attempts      TestAttempt[]
+
+  @@index([section]) // For test filtering
+}
+
+// ============================================================================
+// MODEL 3: Question
+// ============================================================================
+// CRITICAL: Store ONCE, reference everywhere. NO duplication.
+// Storage: ~300-500 bytes per question (text varies)
+model Question {
+  id              Int     @id @default(autoincrement())
+  questionText    String  @db.Text // Actual question
+  correctOption   Int     // 0-3 (which option is correct)
+  difficulty      Int     // 0=easy, 1=medium, 2=hard
+  timeLimitSecsnd Int     @default(120) // Typical per question
+
+  options        QuestionOption[]
+  testQuestions  TestQuestion[]
+  questionAtmpts QuestionAttempt[]
+
+  // No index on questionText: we never search by text content
+  // Questions accessed by ID only (already optimized)
+}
+
+// ============================================================================
+// MODEL 4: QuestionOption
+// ============================================================================
+// Strategy: Store options separately to avoid repeating in test mappings.
+// Storage: ~200 bytes per option (most expensive per row)
+model QuestionOption {
+  id           Int    @id @default(autoincrement())
+  questionId   Int
+  optionIndex  Int    // 0-3
+  optionText   String @db.VarChar(500)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, optionIndex])
+  @@index([questionId]) // For fetching all options of a question
+}
+
+// ============================================================================
+// MODEL 5: TestQuestion (Junction Table)
+// ============================================================================
+// CRITICAL: Each test-question pair stored ONCE. NO duplication.
+// Storage: ~12 bytes per entry
+model TestQuestion {
+  testId     Int
+  questionId Int
+  position   Int   // Order within test (0-99)
+  marks      Int   @default(1) // Can vary per test
+
+  test     Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([testId, questionId])
+  @@index([testId]) // For "get all questions in test"
+}
+
+// ============================================================================
+// MODEL 6: TestAttempt (MAIN GROWTH TABLE)
+// ============================================================================
+// Strategy: Compact record, delete old attempts after 90 days.
+// Storage: ~50 bytes per attempt
+// GROWTH RATE: ~10,000 entries for 1000 users × 10 tests
+model TestAttempt {
+  id              Int     @id @default(autoincrement())
+  userId          Int
+  testId          Int
+  score           Int?    // NULL until completed
+  timeTakenSecs   Int?    // NULL until completed
+  status          Int     @default(0) // 0=in_progress, 1=completed, 2=abandoned
+  startedAt       Int     // Unix timestamp
+  completedAt     Int?    // NULL until completed
+
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test              Test              @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questionAttempts  QuestionAttempt[]
+
+  @@index([userId]) // For user's test history
+  @@index([status]) // For filtering in-progress tests
+  // TTL: Delete after 90 days using cleanup query
+}
+
+// ============================================================================
+// MODEL 7: QuestionAttempt (FASTEST GROWING TABLE - MOST CRITICAL)
+// ============================================================================
+// Strategy: Minimal columns, no redundancy. This grows FASTEST.
+// Storage: ~25 bytes per entry
+// GROWTH RATE: ~1M entries for 1000 users × 10 tests × 100 questions
+model QuestionAttempt {
+  attemptId       Int
+  questionId      Int
+  selectedOption  Int     // 0-3, or 255 if not answered
+  isCorrect       Boolean // Use BOOLEAN (1 byte)
+  timeTakenSecs   Int?    // Seconds on this question
+
+  attempt   TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question  Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([attemptId, questionId])
+  // NO extra indexes: PRIMARY KEY is enough
+  // Queries use (attemptId, questionId) which is optimal
+}
+
+// ============================================================================
+// MODEL 8: College (Optional, minimal)
+// ============================================================================
+// Strategy: Immutable reference data. Fetch all at once.
+// Storage: ~100 bytes per college
+model College {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  tier        Int?    // 0=tier1, 1=tier2, 2=tier3
+  cutoffMarks Int?    // Expected cutoff
+
+  // No relations needed for this table
+}
+
+// ============================================================================
+// MODEL 9: Session (Optional - Auto-cleanup)
+// ============================================================================
+// Strategy: Expires after 24 hours. Deleted daily.
+// Storage: ~80 bytes per session, auto-cleaned
+model Session {
+  id        String @id @db.VarChar(64) // JWT token hash or session ID
+  userId    Int
+  expiresAt Int    // Unix timestamp
+  createdAt Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt]) // For cleanup queries
+}
+
+// ============================================================================
+// STORAGE BREAKDOWN
+// ============================================================================
+// Expected sizes for 1000 users, 100 questions/test, 10 tests/user:
+//
+// users:               ~120 KB
+// tests:               ~5 KB
+// questions:           ~500 KB
+// questionOptions:     ~200 KB
+// testQuestions:       ~12 KB
+// testAttempts:        ~500 KB (10,000 entries)
+// questionAttempts:    ~25 MB (1M entries) ← LARGEST
+// colleges:            ~100 KB
+// sessions:            ~10 KB (auto-deleted)
+//
+// TOTAL ESTIMATED: ~26-30 MB (well within free tier)
+// ============================================================================
+
+// ============================================================================
+// DATA TYPE CHOICES FOR MINIMAL STORAGE
+// ============================================================================
+// - Int (4 bytes) instead of BigInt (8 bytes)
+// - Int (stored as SMALLINT in native SQL) for ranges like 0-3
+// - Boolean (1 byte) for true/false flags
+// - String timestamps as Unix Int (4 bytes) not DateTime (8+ bytes)
+// - VarChar(N) for fixed-max strings, not unlimited TEXT
+// - No JSON fields, no array columns
+// - No ENUM types (use Int instead)
+// ============================================================================
