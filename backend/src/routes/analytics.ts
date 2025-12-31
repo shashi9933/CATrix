@@ -10,7 +10,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId;
 
-    let analytics = await prisma.analytics.findUnique({
+    let analytics = await prisma.analytics.findFirst({
       where: { userId: userId! }
     });
 
@@ -56,7 +56,7 @@ router.post('/update', authMiddleware, async (req: AuthRequest, res) => {
     const { testId, score, totalMarks, timeTaken } = req.body;
 
     // Get or create analytics
-    let analytics = await prisma.analytics.findUnique({
+    let analytics = await prisma.analytics.findFirst({
       where: { userId: userId! }
     });
 
@@ -66,9 +66,9 @@ router.post('/update', authMiddleware, async (req: AuthRequest, res) => {
       });
     }
 
-    // Update analytics
+    // Update analytics using id
     const updatedAnalytics = await prisma.analytics.update({
-      where: { userId: userId! },
+      where: { id: analytics.id },
       data: {
         totalTests: analytics.totalTests + 1,
         totalScore: analytics.totalScore + (score || 0),
