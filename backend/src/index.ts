@@ -19,7 +19,8 @@ const prisma = new PrismaClient();
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://ca-trix-8sl8x7ks0-shashi-shekhars-projects-ba2c4902.vercel.app',
-  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
