@@ -27,8 +27,8 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // allow all Vercel deployments
-    if (origin.endsWith('.vercel.app')) {
+    // allow all Vercel deployments (production and preview)
+    if (origin.includes('.vercel.app')) {
       return callback(null, true);
     }
 
@@ -37,6 +37,12 @@ app.use(cors({
       return callback(null, true);
     }
 
+    // allow specific production URLs
+    if (origin === 'https://ca-trix.vercel.app') {
+      return callback(null, true);
+    }
+
+    console.warn(`CORS rejected: ${origin}`);
     return callback(new Error('CORS not allowed'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
