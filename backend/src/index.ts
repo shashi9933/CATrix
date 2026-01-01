@@ -16,36 +16,10 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
-// ✅ CORS — FIXED
+// ✅ CORS — Allow all for now (debug)
 app.use(cors({
-  origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps, curl, health checks)
-    if (!origin) return callback(null, true);
-
-    // allow localhost for dev
-    if (origin.startsWith('http://localhost')) {
-      return callback(null, true);
-    }
-
-    // allow all Vercel deployments (production and preview)
-    if (origin.includes('.vercel.app')) {
-      return callback(null, true);
-    }
-
-    // allow custom domain if any
-    if (origin === process.env.FRONTEND_URL) {
-      return callback(null, true);
-    }
-
-    // allow specific production URLs
-    if (origin === 'https://ca-trix.vercel.app') {
-      return callback(null, true);
-    }
-
-    console.warn(`CORS rejected: ${origin}`);
-    return callback(new Error('CORS not allowed'));
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
