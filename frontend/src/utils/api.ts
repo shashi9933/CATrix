@@ -34,101 +34,101 @@ api.interceptors.response.use(
 // ===== AUTH API =====
 export const authAPI = {
   register: (email: string, password: string, name?: string) =>
-    api.post('/auth/register', { email, password, name }),
+    api.post('auth/register', { email, password, name }),
   
   login: (email: string, password: string) =>
-    api.post('/auth/login', { email, password }),
+    api.post('auth/login', { email, password }),
   
   verify: () =>
-    api.post('/auth/verify')
-  ,
+    api.post('auth/verify'),
+  
   guest: () =>
-    api.post('/auth/guest')
+    api.post('auth/guest')
 };
 
 // ===== USERS API =====
 export const userAPI = {
   getProfile: () =>
-    api.get('/users/profile'),
+    api.get('users/profile'),
   
   updateProfile: (name: string) =>
-    api.patch('/users/profile', { name })
+    api.patch('users/profile', { name })
 };
 
 // ===== TESTS API =====
 export const testAPI = {
   getAll: () =>
-    api.get('/tests'),
+    api.get('tests'),
   
   getById: (id: string) =>
-    api.get(`/tests/${id}`),
+    api.get(`tests/${id}`),
   
   create: (testData: any) =>
-    api.post('/tests', testData),
+    api.post('tests', testData),
   
   // Aliases for compatibility
   createAttempt: (testId: string) =>
-    api.post('/test-attempts', { testId }),
+    api.post('test-attempts', { testId }),
   
   recordAnswer: (attemptId: string, questionId: string, answer: string) =>
-    api.post(`/test-attempts/${attemptId}/answers`, { questionId, answer })
+    api.post(`test-attempts/${attemptId}/answers`, { questionId, answer })
 };
 
 // ===== TEST ATTEMPTS API =====
 export const testAttemptAPI = {
   create: (testId: string) =>
-    api.post('/test-attempts', { testId }),
+    api.post('test-attempts', { testId }),
   
   getById: (id: string) =>
-    api.get(`/test-attempts/${id}`),
+    api.get(`test-attempts/${id}`),
   
   update: (id: string, data: any) =>
-    api.patch(`/test-attempts/${id}`, data),
+    api.patch(`test-attempts/${id}`, data),
   
   getUserAttempts: () =>
-    api.get('/test-attempts/user/attempts')
+    api.get('test-attempts/user/attempts')
 };
 
 // ===== ANALYTICS API =====
 export const analyticsAPI = {
   get: () =>
-    api.get('/analytics'),
+    api.get('analytics'),
   
   getUserAnalytics: () =>
-    api.get('/analytics/user'),
+    api.get('analytics/user'),
   
   getRecentTests: () =>
-    api.get('/analytics/recent-tests'),
+    api.get('analytics/recent-tests'),
   
   update: (data: any) =>
-    api.post('/analytics/update', data)
+    api.post('analytics/update', data)
 };
 
 // ===== COLLEGES API =====
 export const collegeAPI = {
   getAll: () =>
-    api.get('/colleges'),
+    api.get('colleges'),
   
   getById: (id: string) =>
-    api.get(`/colleges/${id}`),
+    api.get(`colleges/${id}`),
   
   create: (collegeData: any) =>
-    api.post('/colleges', collegeData)
+    api.post('colleges', collegeData)
 };
 
 // ===== STUDY MATERIALS API =====
 export const studyMaterialAPI = {
   getAll: () =>
-    api.get('/study-materials'),
+    api.get('study-materials'),
   
   getBySection: (section: string) =>
-    api.get(`/study-materials/section/${section}`),
+    api.get(`study-materials/section/${section}`),
   
   getById: (id: string) =>
-    api.get(`/study-materials/${id}`),
+    api.get(`study-materials/${id}`),
   
   create: (materialData: any) =>
-    api.post('/study-materials', materialData)
+    api.post('study-materials', materialData)
 };
 
 export default api;
