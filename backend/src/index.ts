@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import type { CorsOptions } from 'cors';
 
 import testRoutes from './routes/tests.js';
 import authRoutes from './routes/auth.js';
@@ -17,15 +18,15 @@ const app = express();
 const prisma = new PrismaClient();
 
 // ✅ CORS Configuration
-const allowedOrigins = [
+const allowedOrigins: string[] = [
   'http://localhost:5173',      // Local dev
   'http://localhost:3000',      // Alternative local
   'https://vercel.app',         // Vercel preview deployments
-  process.env.FRONTEND_URL,     // Production frontend URL
-].filter(Boolean);
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])  // Production frontend URL
+];
 
-app.use(cors({
-  origin: (origin, callback) => {
+const corsOptions: CorsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
@@ -39,7 +40,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
