@@ -12,7 +12,8 @@ const api: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 30000 // 30 second timeout for slow connections
+  timeout: 30000, // 30 second timeout for slow connections
+  withCredentials: true // ✅ IMPORTANT: Send credentials (cookies, auth headers)
 });
 
 // Add token to requests

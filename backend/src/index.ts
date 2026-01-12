@@ -15,39 +15,47 @@ import testAttemptRoutes from './routes/testAttempts';
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 
-// ✅ CORS Configuration
+// ✅ Prisma Client - Singleton pattern for serverless/Vercel
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    log: ['error', 'warn'],
+  });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
+
+// ✅ CORS Configuration - FIXED LOGIC
 const allowedOrigins: string[] = [
-  'http://localhost:5173',           // Local dev
-  'http://localhost:3000',           // Alternative local
-  'https://vercel.app',              // All Vercel preview deployments
-  'https://ca-trix-frontend.vercel.app', // Custom domain (if set up)
-  'https://ca-trix-frontend-git-main-shashi-shekhars-projects-ba2c4902.vercel.app', // Vercel auto-generated
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])  // Production frontend URL from env
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://ca-trix-frontend.vercel.app',
 ];
 
 const corsOptions: CorsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow requests with no origin (like mobile apps or curl)
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    
-    // Check if origin is in allowed list OR ends with vercel.app (accept all Vercel deployments)
-    const isAllowed = allowedOrigins.some(allowed => 
-      origin === allowed || origin.endsWith(allowed)
-    ) || origin.endsWith('.vercel.app');
-    
+
+    // ✅ CORRECT LOGIC: exact match OR any .vercel.app domain
+    const isAllowed =
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app');
+
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked from origin: ${origin}`);
-      callback(null, false);
+      console.warn(`❌ CORS blocked: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  preflightContinue: false
 };
 
 app.use(cors(corsOptions));
