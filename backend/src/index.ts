@@ -16,11 +16,29 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
-// ✅ CORS — Allow all for now (debug)
+// ✅ CORS Configuration
+const allowedOrigins = [
+  'http://localhost:5173',      // Local dev
+  'http://localhost:3000',      // Alternative local
+  'https://vercel.app',         // Vercel preview deployments
+  process.env.FRONTEND_URL,     // Production frontend URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.some(allowed => origin.includes(allowed))) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked: ${origin}`);
+      callback(null, false);
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 app.use(express.json());

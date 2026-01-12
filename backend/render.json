@@ -1,0 +1,4 @@
+{
+  "buildCommand": "npm install && npm run build && npx prisma db push",
+  "startCommand": "node dist/index.js"
+}

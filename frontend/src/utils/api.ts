@@ -1,12 +1,18 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) || 'http://localhost:5000/api';
+// Use environment variable or default to Render backend
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) 
+  || 'https://catrix-backend.onrender.com/api'
+  || 'http://localhost:5000/api';
+
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 30000 // 30 second timeout for slow connections
 });
 
 // Add token to requests
