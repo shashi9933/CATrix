@@ -22,7 +22,9 @@ const allowedOrigins: string[] = [
   'http://localhost:5173',      // Local dev
   'http://localhost:3000',      // Alternative local
   'https://vercel.app',         // Vercel preview deployments
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])  // Production frontend URL
+  'https://ca-trix.vercel.app', // Production Vercel
+  'https://catrix.vercel.app',  // Alternative Vercel
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])  // Production frontend URL from env
 ];
 
 const corsOptions: CorsOptions = {
@@ -30,16 +32,22 @@ const corsOptions: CorsOptions = {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.some(allowed => origin.includes(allowed))) {
+    // Check exact match or substring match
+    const isAllowed = allowedOrigins.some(allowed => 
+      origin === allowed || origin.endsWith(allowed)
+    );
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked: ${origin}`);
+      console.warn(`CORS blocked from origin: ${origin}`);
       callback(null, false);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  preflightContinue: false
 };
 
 app.use(cors(corsOptions));

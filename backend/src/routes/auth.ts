@@ -132,4 +132,45 @@ router.post('/verify', async (req, res) => {
   }
 });
 
+// Google OAuth callback - creates/updates user and returns JWT token
+router.post('/google', async (req, res) => {
+  try {
+    const { email, name, googleId, picture } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({ error: 'Email and googleId are required' });
+    }
+
+    // Find or create user
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Create new user with Google OAuth
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || email.split('@')[0],
+          password: '', // No password for OAuth users
+          // You can add googleId as a field if needed
+        }
+      });
+    }
+
+    // Create JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'dev-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      token
+    });
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.status(500).json({ error: 'Google authentication failed' });
+  }
+});
+
 export default router;

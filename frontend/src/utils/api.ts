@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 // Use environment variable or default to Render backend
 const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) 
-  || 'https://catrix-backend.onrender.com/api'
+  || 'https://catrix.onrender.com/api'
   || 'http://localhost:5000/api';
 
 console.log('🔗 API Base URL:', API_BASE_URL);
@@ -49,7 +49,12 @@ export const authAPI = {
     api.post('auth/verify'),
   
   guest: () =>
-    api.post('auth/guest')
+    api.post('auth/guest'),
+  
+  // Google OAuth login
+  googleLogin: (email: string, name: string, googleId: string, picture?: string) =>
+    api.post('auth/google', { email, name, googleId, picture })
+
 };
 
 // ===== USERS API =====
