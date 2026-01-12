@@ -4,13 +4,13 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import type { CorsOptions } from 'cors';
 
-import testRoutes from './routes/tests.js';
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
-import analyticsRoutes from './routes/analytics.js';
-import collegeRoutes from './routes/colleges.js';
-import studyMaterialRoutes from './routes/studyMaterials.js';
-import testAttemptRoutes from './routes/testAttempts.js';
+import testRoutes from './routes/tests';
+import authRoutes from './routes/auth';
+import userRoutes from './routes/users';
+import analyticsRoutes from './routes/analytics';
+import collegeRoutes from './routes/colleges';
+import studyMaterialRoutes from './routes/studyMaterials';
+import testAttemptRoutes from './routes/testAttempts';
 
 dotenv.config();
 
