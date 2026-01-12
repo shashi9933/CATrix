@@ -21,10 +21,9 @@ const prisma = new PrismaClient();
 const allowedOrigins: string[] = [
   'http://localhost:5173',           // Local dev
   'http://localhost:3000',           // Alternative local
-  'https://vercel.app',              // Vercel preview deployments
-  'https://ca-trix.vercel.app',      // Production Vercel
-  'https://ca-trix-frontend.vercel.app', // Production Vercel (full name)
-  'https://catrix.vercel.app',       // Alternative Vercel
+  'https://vercel.app',              // All Vercel preview deployments
+  'https://ca-trix-frontend.vercel.app', // Custom domain (if set up)
+  'https://ca-trix-frontend-git-main-shashi-shekhars-projects-ba2c4902.vercel.app', // Vercel auto-generated
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])  // Production frontend URL from env
 ];
 
