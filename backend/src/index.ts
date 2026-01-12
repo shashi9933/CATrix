@@ -32,10 +32,10 @@ const corsOptions: CorsOptions = {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    // Check exact match or substring match
+    // Check if origin is in allowed list OR ends with vercel.app (accept all Vercel deployments)
     const isAllowed = allowedOrigins.some(allowed => 
       origin === allowed || origin.endsWith(allowed)
-    );
+    ) || origin.endsWith('.vercel.app');
     
     if (isAllowed) {
       callback(null, true);
