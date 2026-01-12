@@ -19,11 +19,12 @@ const prisma = new PrismaClient();
 
 // ✅ CORS Configuration
 const allowedOrigins: string[] = [
-  'http://localhost:5173',      // Local dev
-  'http://localhost:3000',      // Alternative local
-  'https://vercel.app',         // Vercel preview deployments
-  'https://ca-trix.vercel.app', // Production Vercel
-  'https://catrix.vercel.app',  // Alternative Vercel
+  'http://localhost:5173',           // Local dev
+  'http://localhost:3000',           // Alternative local
+  'https://vercel.app',              // Vercel preview deployments
+  'https://ca-trix.vercel.app',      // Production Vercel
+  'https://ca-trix-frontend.vercel.app', // Production Vercel (full name)
+  'https://catrix.vercel.app',       // Alternative Vercel
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])  // Production frontend URL from env
 ];
 

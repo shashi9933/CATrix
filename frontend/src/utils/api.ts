@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 // Use environment variable or default to Render backend
 const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) 
-  || 'https://catrix.onrender.com/api'
+  || 'https://catrix-backend.onrender.com/api'
   || 'http://localhost:5000/api';
 
 console.log('🔗 API Base URL:', API_BASE_URL);
