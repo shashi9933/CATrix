@@ -1,9 +1,13 @@
 import axios, { AxiosInstance } from 'axios';
 
 // Use environment variable or default to Render backend
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) 
-  || 'https://catrix-backend.onrender.com/api'
-  || 'http://localhost:5000/api';
+let API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) 
+  || 'https://catrix-backend.onrender.com/api';
+
+// Ensure /api is included
+if (API_BASE_URL && !API_BASE_URL.endsWith('/api')) {
+  API_BASE_URL = API_BASE_URL.replace(/\/$/, '') + '/api';
+}
 
 console.log('🔗 API Base URL:', API_BASE_URL);
 
