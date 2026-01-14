@@ -108,13 +108,16 @@ model Analytics {
 }
 
 model College {
-  id        String   @id @default(cuid())
-  name      String
-  location  String?
-  cutoff    Int?
-  tier      String?  // "tier1", "tier2", "tier3"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  rankIndia   Int      @unique
+  name        String
+  location    String?
+  cutoff      Json?    // { general: number, obc: number, sc: number, st: number }
+  placements  Json?    // { averageCTC: number, medianCTC: number, highestCTC: number }
+  diversity   Json?    // { malePercentage: number, femalePercentage: number }
+  tier        String?  // "tier1", "tier2", "tier3"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("colleges")
 }
